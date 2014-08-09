@@ -90,6 +90,124 @@ public class MainActivity extends Activity {
 		}
 	}
 
+	public static void receiveFile() {
+		new ReceiveFileTask().execute();
+	}
+
+	private class ReceiveFileTask extends AsyncTask<String, Integer, String> {
+
+		@Override
+		protected String doInBackground(String... params) {
+			Socket socket = null;
+			DataOutputStream dataOutputStream = null;
+			DataInputStream dataInputStream = null;
+
+			// System.out.println("Button clicked, still not connection...");
+
+			try {
+				// System.out.println("Connecting...");
+
+				socket = new Socket("138.250.194.200", 8888);
+				
+				int bytesRead;
+				InputStream in;
+				int bufferSize = 0;
+
+				bufferSize = socket.getReceiveBufferSize();
+				dataInputStream = new DataInputStream(socket.getInputStream());
+				String fileName = dataInputStream.readUTF();
+				System.out.println(fileName);
+				OutputStream output = new FileOutputStream(Environment.getExternalStorageDirectory() + fileName);
+				byte[] buffer = new byte[bufferSize];
+				int count;
+				while ((count = dataInputStream.read(buffer)) > 0) {
+					output.write(buffer, 0, count);
+				}
+				
+				// System.out.println("Connected");
+
+				// System.out.println("Sending data...");
+
+				// System.out.println("Sent");
+
+				return dataInputStream.readUTF();
+			} catch (UnknownHostException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} finally {
+				if (socket != null) {
+					try {
+						socket.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+
+				if (dataOutputStream != null) {
+					try {
+						dataOutputStream.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+
+				if (dataInputStream != null) {
+					try {
+						dataInputStream.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+			return "";
+
+			//
+			int bytesRead;
+			InputStream in;
+			int bufferSize = 0;
+
+			try {
+				bufferSize = socket.getReceiveBufferSize();
+				in = socket.getInputStream();
+				DataInputStream clientData = new DataInputStream(in);
+				String fileName = clientData.readUTF();
+				System.out.println(fileName);
+				OutputStream output = new FileOutputStream(
+						"//home//evinish//Documents//Android//Received files//"
+								+ fileName);
+				byte[] buffer = new byte[bufferSize];
+				int read;
+				while ((read = clientData.read(buffer)) != -1) {
+					output.write(buffer, 0, read);
+				}
+
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			//
+		}
+
+		protected void onPostExecute(String res) {
+			EditText base = (EditText) findViewById(R.id.baseText);
+			EditText power = (EditText) findViewById(R.id.powerText);
+			TextView result = (TextView) findViewById(R.id.resultText);
+
+			result.setText(base.getText().toString() + " to the power of "
+					+ power.getText().toString() + " is " + res);
+
+			System.out.println("Time elapsed: "
+					+ (System.nanoTime() - beginning) + "ns");
+		}
+
+	}
+
 	public void computeOnDevice(View view) {
 		beginning = System.nanoTime();
 
@@ -108,6 +226,37 @@ public class MainActivity extends Activity {
 				.getText().toString());
 	}
 
+	private class ComputationTask extends AsyncTask<String, Integer, String> {
+
+		@Override
+		protected String doInBackground(String... params) {
+			int n = Integer.parseInt(params[1]);
+
+			long baseDo = Long.parseLong(params[0]);
+			BigInteger resul = new BigInteger("1");
+
+			while (n > 0) {
+				resul = resul.multiply(BigInteger.valueOf(baseDo));
+				--n;
+			}
+
+			return resul.toString();
+		}
+
+		protected void onPostExecute(String res) {
+			EditText base = (EditText) findViewById(R.id.baseText);
+			EditText power = (EditText) findViewById(R.id.powerText);
+			TextView result = (TextView) findViewById(R.id.resultText);
+
+			result.setText(base.getText().toString() + " to the power of "
+					+ power.getText().toString() + " is " + res);
+
+			System.out.println("Time elapsed: "
+					+ (System.nanoTime() - beginning) + "ns");
+		}
+
+	}
+
 	public void computeOnServer(View view) {
 		beginning = System.nanoTime();
 
@@ -121,40 +270,9 @@ public class MainActivity extends Activity {
 				|| power.getText().toString().equals(""))
 			// TODO create a error message
 			System.exit(0);
-		
+
 		new ServerInteractionTask().execute(base.getText().toString(), power
 				.getText().toString());
-	}
-	
-	private class ComputationTask extends AsyncTask<String, Integer, String>{
-
-		@Override
-		protected String doInBackground(String... params) {
-			int n = Integer.parseInt(params[1]);
-
-			long baseDo = Long.parseLong(params[0]);
-			BigInteger resul = new BigInteger("1");
-
-			while (n > 0) {
-				resul = resul.multiply(BigInteger.valueOf(baseDo));
-				--n;
-			}
-			
-			return resul.toString();
-		}
-		
-		protected void onPostExecute(String res) {
-			EditText base = (EditText) findViewById(R.id.baseText);
-			EditText power = (EditText) findViewById(R.id.powerText);
-			TextView result = (TextView) findViewById(R.id.resultText);
-
-			result.setText(base.getText().toString() + " to the power of "
-					+ power.getText().toString() + " is " + res);
-
-			System.out.println("Time elapsed: " + (System.nanoTime() - beginning)
-					+ "ns");
-		}
-		
 	}
 
 	private class ServerInteractionTask extends
@@ -166,25 +284,25 @@ public class MainActivity extends Activity {
 			DataOutputStream dataOutputStream = null;
 			DataInputStream dataInputStream = null;
 
-			//System.out.println("Button clicked, still not connection...");
+			// System.out.println("Button clicked, still not connection...");
 
 			try {
-				//System.out.println("Connecting...");
+				// System.out.println("Connecting...");
 
 				socket = new Socket("138.250.194.200", 8888);
 
-				//System.out.println("Connected");
+				// System.out.println("Connected");
 
 				dataOutputStream = new DataOutputStream(
 						socket.getOutputStream());
 				dataInputStream = new DataInputStream(socket.getInputStream());
 
-				//System.out.println("Sending data...");
+				// System.out.println("Sending data...");
 
 				dataOutputStream.writeUTF(params[0]);
 				dataOutputStream.writeUTF(params[1]);
 
-				//System.out.println("Sent");
+				// System.out.println("Sent");
 
 				return dataInputStream.readUTF();
 			} catch (UnknownHostException e) {
