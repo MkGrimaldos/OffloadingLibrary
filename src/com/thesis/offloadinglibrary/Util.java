@@ -3,35 +3,38 @@ package com.thesis.offloadinglibrary;
 import java.net.Socket;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.UnknownHostException;
-import java.math.BigInteger;
+//import java.math.BigInteger;
 
-import com.thesis.offloadinglibrary.R;
+
+//import com.thesis.offloadinglibrary.R;
 
 import android.app.Activity;
-import android.app.ActionBar;
-import android.app.Fragment;
+import android.media.MediaScannerConnection;
+import android.net.Uri;
+//import android.app.Fragment;
 import android.os.AsyncTask;
-import android.os.Bundle;
-import android.util.TimingLogger;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.os.Build;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
+//import android.os.Bundle;
+import android.os.Environment;
+import android.util.Log;
+//import android.view.LayoutInflater;
+//import android.view.Menu;
+//import android.view.MenuItem;
+//import android.view.View;
+//import android.view.ViewGroup;
+//import android.widget.EditText;
+//import android.widget.TextView;
 
-public class MainActivity extends Activity {
+public class Util extends Activity {
 	/*
 	 * EditText base; EditText power; TextView result;
 	 */
 
-	long beginning = 0;
-
+	//long beginning = 0;
+/*
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -47,7 +50,7 @@ public class MainActivity extends Activity {
 		 * onDeviceButton.setOnClickListener(onDeviceButtonOnClickListener);
 		 * onServerButton.setOnClickListener(onServerButtonOnClickListener);
 		 */
-		if (savedInstanceState == null) {
+/*		if (savedInstanceState == null) {
 			getFragmentManager().beginTransaction()
 					.add(R.id.container, new PlaceholderFragment()).commit();
 		}
@@ -76,7 +79,7 @@ public class MainActivity extends Activity {
 	/**
 	 * A placeholder fragment containing a simple view.
 	 */
-	public static class PlaceholderFragment extends Fragment {
+/*	public static class PlaceholderFragment extends Fragment {
 
 		public PlaceholderFragment() {
 		}
@@ -89,9 +92,10 @@ public class MainActivity extends Activity {
 			return rootView;
 		}
 	}
-
-	public static void receiveFile() {
-		new ReceiveFileTask().execute();
+*/
+	
+	public void receiveFile(long beginning) {
+		new ReceiveFileTask().execute(Long.toString(beginning));
 	}
 
 	private class ReceiveFileTask extends AsyncTask<String, Integer, String> {
@@ -101,36 +105,34 @@ public class MainActivity extends Activity {
 			Socket socket = null;
 			DataOutputStream dataOutputStream = null;
 			DataInputStream dataInputStream = null;
+			OutputStream output = null;
 
-			// System.out.println("Button clicked, still not connection...");
+			System.out.println("Button clicked, still not connection...");
 
 			try {
-				// System.out.println("Connecting...");
+				System.out.println("Connecting...");
 
 				socket = new Socket("138.250.194.200", 8888);
 				
-				int bytesRead;
-				InputStream in;
+				System.out.println("Connected");
+				
 				int bufferSize = 0;
+				
+				System.out.println("Receiving data...");
 
 				bufferSize = socket.getReceiveBufferSize();
 				dataInputStream = new DataInputStream(socket.getInputStream());
 				String fileName = dataInputStream.readUTF();
 				System.out.println(fileName);
-				OutputStream output = new FileOutputStream(Environment.getExternalStorageDirectory() + fileName);
+				output = new FileOutputStream(Environment.getExternalStorageDirectory() + "/" + fileName);
 				byte[] buffer = new byte[bufferSize];
 				int count;
 				while ((count = dataInputStream.read(buffer)) > 0) {
 					output.write(buffer, 0, count);
 				}
+
+				System.out.println("Received");
 				
-				// System.out.println("Connected");
-
-				// System.out.println("Sending data...");
-
-				// System.out.println("Sent");
-
-				return dataInputStream.readUTF();
 			} catch (UnknownHostException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -164,10 +166,19 @@ public class MainActivity extends Activity {
 						e.printStackTrace();
 					}
 				}
+				
+				if (output != null) {
+					try {
+						output.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
 			}
-			return "";
+			return params[0];
 
-			//
+			/*
 			int bytesRead;
 			InputStream in;
 			int bufferSize = 0;
@@ -191,23 +202,19 @@ public class MainActivity extends Activity {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			//
+			*/
 		}
 
 		protected void onPostExecute(String res) {
-			EditText base = (EditText) findViewById(R.id.baseText);
-			EditText power = (EditText) findViewById(R.id.powerText);
-			TextView result = (TextView) findViewById(R.id.resultText);
-
-			result.setText(base.getText().toString() + " to the power of "
-					+ power.getText().toString() + " is " + res);
+			//long beginning = Long.valueOf(res);
 
 			System.out.println("Time elapsed: "
-					+ (System.nanoTime() - beginning) + "ns");
+					+ (System.nanoTime() - Long.valueOf(res)) + "ns");
 		}
 
 	}
 
+/*
 	public void computeOnDevice(View view) {
 		beginning = System.nanoTime();
 
@@ -355,5 +362,5 @@ public class MainActivity extends Activity {
 		}
 
 	}
-
+*/
 }
